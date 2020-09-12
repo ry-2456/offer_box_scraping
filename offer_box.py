@@ -15,6 +15,9 @@ def read_url(f_name):
         base_url = f.read()
         return base_url.strip()
 
+# 既知の会社を管理する
+seen = []
+
 def get_info(html):
     "会社名(name), 職種(job), 年収(pay), 勤務地(pay), 掲載元(source), 掲載日時(updated_at)"
 
@@ -36,6 +39,10 @@ def get_info(html):
         # 会社名が非公開の場合はskip
         if name: name = name.text.strip()
         else: continue
+
+        # 既知の会社はskip
+        if name in seen: continue
+        seen.append(name)
 
         if job: job = job.text.strip()
         else: job = "公開していません"
@@ -95,6 +102,8 @@ def get_updated_at_by_hour(l):
     p = re.compile("(\d+).*")
     m = p.fullmatch(l[1]) # updated_atから数字と時間・日前を抜き出す
 
+    if m is None: return 24*7
+
     if '日' in l[1]:
         updated_at = int(m.group(1)) * 24 # 日は時間に変換
     else:
@@ -130,7 +139,8 @@ def main(file_name, url_name):
 
         info = get_info(res.text)
         write_info(info, full_path=file_name, 
-            key_order=["source","updated_at","name","job","area","pay"])
+            # key_order=["source","updated_at","name","job","area","pay"])
+            key_order=["name","job","area","pay","updated_at","source"])
 
         print(page)
         page += 1 # ページの更新
