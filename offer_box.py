@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import os
 import csv
 import sys
 import time
@@ -44,20 +45,11 @@ def get_info(html):
         if name in seen: continue
         seen.append(name)
 
-        if job: job = job.text.strip()
-        else: job = "公開していません"
-
-        if area: area = area.text.strip()
-        else: area = "公開していません"
-
-        if pay: pay = pay.text.strip()
-        else: pay = "公開していません"
-
-        if source: source = source.text.strip()
-        else: source = "公開していません"
-
-        if updated_at: updated_at = updated_at.text.strip()
-        else: updated_at = "公開していません"
+        job        = job.text.strip() if job else "公開していません"
+        area       = area.text.strip() if area else "公開していません"
+        pay        = pay.text.strip() if pay else "公開していません"
+        source     = source.text.strip() if source else "公開していません"
+        updated_at = updated_at.text.strip() if updated_at else "公開していません"
 
         offer_dict["name"]      = name
         offer_dict["job"]       = job
@@ -151,6 +143,12 @@ def main(file_name, url_name):
     sort_by_date(file_name)
     
 if __name__ == "__main__":
-    url_name = input("input the url name > ")
+
+    while True:
+        url_name = input("input the url name > ")
+        if os.path.exists("./" + url_name): break
+        print('"{}" '.format(url_name) + "does not exist!!!!!!!!!")
+
     file_name = input("input the file name > ")
+
     main(file_name, url_name)
