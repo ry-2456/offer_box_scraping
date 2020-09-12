@@ -17,46 +17,40 @@ def read_url(f_name):
 
 def get_info(html):
     "会社名(name), 職種(job), 年収(pay), 勤務地(pay), 掲載元(source), 掲載日時(updated_at)"
-    #soup = BeautifulSoup(html).main
+
     soup = BeautifulSoup(html, "html.parser")
-
     items = soup.find_all("section", attrs={"class": "s-placeSearch_parent"})
-    info = [] # 求人情報の辞書を格納する
 
+    info = [] # 求人情報の辞書を格納する
 
     for item in items:
         offer_dict = {}
-        # name_job = item.find("span", attrs={"class":"p-result_name"}).string.strip()
-        job = item.find("span", attrs={"class":"p-result_name"}).string.strip()
-        # if "｜" in name_job:
-        #     job, name = name_job.split("｜")
-        # else:
-        #     continue
+
         name       = item.find("p", attrs={"class":"p-result_company"})
+        job        = item.find("span", attrs={"class":"p-result_name"})
         area       = item.find("li", attrs={"class":"p-result_area"})
         pay        = item.find("li", attrs={"class":"p-result_pay"})
         source     = item.find("p", attrs={"class":"p-result_source"})
         updated_at = item.find("p", attrs={"class":"p-result_updatedAt_hyphen"})
 
-        if name is not None:
-            if name.string is not None:
-                name = name.string.strip()
+        # 会社名が非公開の場合はskip
+        if name: name = name.text.strip()
+        else: continue
 
-        if area is not None: 
-            if area.string is not None:
-                area = area.string.strip()
+        if job: job = job.text.strip()
+        else: job = "公開していません"
 
-        if pay is not None: 
-            if pay.string is not None:
-                pay = pay.string.strip()
+        if area: area = area.text.strip()
+        else: area = "公開していません"
 
-        if source is not None: 
-            if source.string is not None:
-                source = source.string.strip()
+        if pay: pay = pay.text.strip()
+        else: pay = "公開していません"
 
-        if updated_at is not None: 
-            if updated_at.string is not None:
-                updated_at = updated_at.string.strip()
+        if source: source = source.text.strip()
+        else: source = "公開していません"
+
+        if updated_at: updated_at = updated_at.text.strip()
+        else: updated_at = "公開していません"
 
         offer_dict["name"]      = name
         offer_dict["job"]       = job
@@ -149,6 +143,4 @@ def main(file_name, url_name):
 if __name__ == "__main__":
     url_name = input("input the url name > ")
     file_name = input("input the file name > ")
-    # sort_by_date(file_name)
-    # sys.exit(0)
     main(file_name, url_name)
