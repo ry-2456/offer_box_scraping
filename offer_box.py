@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 
 def read_url(f_name):
     " 求人ボックスのURLを読み込む"
-    with open(f_name) as f:
+    with open(f_name, encoding="utf-8") as f:
         base_url = f.read()
         return base_url.strip()
 
@@ -23,17 +23,24 @@ def get_info(html):
     items = soup.find_all("section", attrs={"class": "s-placeSearch_parent"})
     info = [] # 求人情報の辞書を格納する
 
+
     for item in items:
         offer_dict = {}
-        name_job = item.find("span", attrs={"class":"p-result_name"}).string.strip()
-        if "｜" in name_job:
-            job, name = name_job.split("｜")
-        else:
-            continue
+        # name_job = item.find("span", attrs={"class":"p-result_name"}).string.strip()
+        job = item.find("span", attrs={"class":"p-result_name"}).string.strip()
+        # if "｜" in name_job:
+        #     job, name = name_job.split("｜")
+        # else:
+        #     continue
+        name       = item.find("p", attrs={"class":"p-result_company"})
         area       = item.find("li", attrs={"class":"p-result_area"})
         pay        = item.find("li", attrs={"class":"p-result_pay"})
         source     = item.find("p", attrs={"class":"p-result_source"})
         updated_at = item.find("p", attrs={"class":"p-result_updatedAt_hyphen"})
+
+        if name is not None:
+            if name.string is not None:
+                name = name.string.strip()
 
         if area is not None: 
             if area.string is not None:
@@ -70,7 +77,7 @@ def write_info(info, full_path, key_order):
         l = [each_info[key] for key in key_order]
         lines.append(l)
     
-    with open(full_path, mode="a") as f:
+    with open(full_path, mode="a", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerows(lines) 
 
@@ -104,26 +111,26 @@ def get_updated_at_by_hour(l):
 def sort_by_date(full_path):
     "file_nameで指定されたcsvファイルを日付順でソートする"
 
-    with open(full_path, mode="r") as f:
+    with open(full_path, mode="r", encoding='utf-8') as f:
         reader = csv.reader(f)
         lines = [row for row in reader] # 2次元配列に変換
 
     # updated_atで昇順で並び替え
     lines.sort(key=get_updated_at_by_hour)
 
-    # 
-    with open(full_path, mode="w") as f:
+    with open(full_path, mode="w", newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerows(lines) 
 
 
-def main(file_name):
-    base_url = read_url("base_url.txt")
+def main(file_name, url_name):
+    base_url = read_url(url_name)
     page = 1
 
     while True:
         url = base_url + "&pg=" + str(page)
-        res = requests.post(url, data={"form[updatedAt]":'2'})
+        res = requests.post(url, data={"form[updatedAt]":'1'    # 1=>24時間以内 2=>3日以内 3=>7日以内
+                                     , "form[employType]":'1'}) # 1=>正社員
         time.sleep(1.0)                  # 警察のお世話にならないように
         if res.status_code != 200: break # 表示するページがなくなったら抜ける
 
@@ -140,10 +147,8 @@ def main(file_name):
     sort_by_date(file_name)
     
 if __name__ == "__main__":
-    if len(sys.argv) < 2: 
-        file_name = input("input the file name > ")
-    else:
-        file_name = sys.argv[1]
+    url_name = input("input the url name > ")
+    file_name = input("input the file name > ")
     # sort_by_date(file_name)
     # sys.exit(0)
-    main(file_name)
+    main(file_name, url_name)
