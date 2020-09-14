@@ -194,6 +194,7 @@ def job():
             print("Done", flush=True)
 
 if __name__ == "__main__":
+    # LINEでデータ送信する機能
     # schedule.every().day.at("20:53").do(job)
     job()
     # while True:
