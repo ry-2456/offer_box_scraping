@@ -2,6 +2,8 @@
 import re
 import os
 import csv
+import datetime
+import schedule
 import sys
 import time
 import pprint
@@ -20,7 +22,7 @@ def read_url(f_name):
 seen = []
 
 def get_info(html):
-    "会社名(name), 職種(job), 年収(pay), 勤務地(pay), 掲載元(source), 掲載日時(updated_at)"
+    """会社名(name), 職種(job), 年収(pay), 勤務地(pay), 掲載元(source), 掲載日時(updated_at)"""
 
     soup = BeautifulSoup(html, "html.parser")
     items = soup.find_all("section", attrs={"class": "s-placeSearch_parent"})
@@ -104,7 +106,9 @@ def get_updated_at_by_hour(l):
     return updated_at
 
 def sort_by_date(full_path):
-    "file_nameで指定されたcsvファイルを日付順でソートする"
+    """
+    file_nameで指定されたcsvファイルを日付順でソートする
+    """
 
     with open(full_path, mode="r", encoding='utf-8') as f:
         reader = csv.reader(f)
@@ -118,13 +122,26 @@ def sort_by_date(full_path):
         writer.writerows(lines) 
 
 
-def main(file_name, url_name):
+def main(file_name, url_name, updated_at):
+    """
+    スクレイピングを行い取得したデータを保存する
+
+    Parameters
+    ----------
+    file_name : str
+        保存するファイル名 (e.g. osaka_kyoto_hyogo_siga.csv)
+    url_name: str
+        urlが書かれたファイル名(e.g. kansai_url.txt)
+    updated_at : str
+        求人掲載日の範囲(1: 24時間以内  2: 3日以内  3: 7日以内)
+    """
+
     base_url = read_url(url_name)
     page = 1
 
     while True:
         url = base_url + "&pg=" + str(page)
-        res = requests.post(url, data={"form[updatedAt]":'1'    # 1=>24時間以内 2=>3日以内 3=>7日以内
+        res = requests.post(url, data={"form[updatedAt]": updated_at    # 1=>24時間以内 2=>3日以内 3=>7日以内
                                      , "form[employType]":'1'}) # 1=>正社員
         time.sleep(1.0)                  # 警察のお世話にならないように
         if res.status_code != 200: break # 表示するページがなくなったら抜ける
@@ -141,14 +158,36 @@ def main(file_name, url_name):
     print(page)
 
     sort_by_date(file_name)
+
+def job():
+    while True:
+        print("掲載日範囲選択 [1, 2, 3]のどれかを選択してください\n"
+              "1: within 24 hours\n"
+              "2: within 3 days\n"
+              "3: within 7 days")
+        updated_at = input("> ")
+        if updated_at in ['1', '2', '3']: break
+
+    url_name = "kansai_url.txt"
+    file_name = "osaka_kyoto_hyogo_siga.csv"
+    main(file_name, url_name, updated_at)
+
+    url_name = "chubu_url.txt"
+    file_name = "mie_aichi_gifu.csv"
+    main(file_name, url_name, updated_at)
     
 if __name__ == "__main__":
 
-    while True:
-        url_name = input("input the url name > ")
-        if os.path.exists("./" + url_name): break
-        print('"{}" '.format(url_name) + "does not exist!!!!!!!!!")
+    # while True:
+    #     url_name = input("input the url name > ")
+    #     if os.path.exists("./" + url_name): break
+    #     print('"{}" '.format(url_name) + "does not exist!!!!!!!!!")
 
-    file_name = input("input the file name > ")
+    # file_name = input("input the file name > ")
 
-    main(file_name, url_name)
+    # main(file_name, url_name)
+    # schedule.every().day.at("20:53").do(job)
+    job()
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(30)
