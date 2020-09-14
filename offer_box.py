@@ -3,6 +3,7 @@ import re
 import os
 import csv
 import datetime
+import glob
 import schedule
 import sys
 import time
@@ -11,9 +12,13 @@ import requests
 # from urllib import request
 from bs4 import BeautifulSoup
 
+url_dir = "url_dir"
+data_dir = "data_dir"
+
 
 def read_url(f_name):
     " 求人ボックスのURLを読み込む"
+    # with open(f_name, encoding="utf-8") as f:
     with open(f_name, encoding="utf-8") as f:
         base_url = f.read()
         return base_url.strip()
@@ -109,7 +114,6 @@ def sort_by_date(full_path):
     """
     file_nameで指定されたcsvファイルを日付順でソートする
     """
-
     with open(full_path, mode="r", encoding='utf-8') as f:
         reader = csv.reader(f)
         lines = [row for row in reader] # 2次元配列に変換
@@ -147,19 +151,18 @@ def main(file_name, url_name, updated_at):
         if res.status_code != 200: break # 表示するページがなくなったら抜ける
 
         info = get_info(res.text)
+        # write_info(info, full_path=file_name, 
         write_info(info, full_path=file_name, 
             # key_order=["source","updated_at","name","job","area","pay"])
             key_order=["name","job","area","pay","updated_at","source"])
 
-        print(page)
+        # print(page)
         page += 1 # ページの更新
-
-    page -= 1
-    print(page)
-
+    
     sort_by_date(file_name)
 
 def job():
+    # 掲載日時範囲の選択
     while True:
         print("掲載日範囲選択 [1, 2, 3]のどれかを選択してください\n"
               "1: within 24 hours\n"
@@ -168,24 +171,29 @@ def job():
         updated_at = input("> ")
         if updated_at in ['1', '2', '3']: break
 
-    url_name = "kansai_url.txt"
-    file_name = "osaka_kyoto_hyogo_siga.csv"
-    main(file_name, url_name, updated_at)
+    # urlが書かれたファイルの読み込み
+    url_list = glob.glob(os.path.join(url_dir, "*_url.txt"))
+    url_list = [os.path.basename(d) for d in url_list]
 
-    url_name = "chubu_url.txt"
-    file_name = "mie_aichi_gifu.csv"
-    main(file_name, url_name, updated_at)
+    for u in url_list:
+        print("* " + u)
+
+    while True:
+        yn = input("上記のurlすべてについてスクレイピングしますか? y or n > ")
+        if yn in ["y", "n"]: break
     
+    # すべてのURLについてスクレイピングを行う
+    if yn == 'y':
+        now = datetime.datetime.now().strftime("%Y%m%d")
+        for u in url_list:
+            url_name = os.path.join(url_dir, u)
+            file_name = os.path.join(data_dir, u.split("_")[0]) + now + ".csv"
+
+            print("scraping " + u + " ... ", end="", flush=True)
+            main(file_name, url_name, updated_at)
+            print("Done", flush=True)
+
 if __name__ == "__main__":
-
-    # while True:
-    #     url_name = input("input the url name > ")
-    #     if os.path.exists("./" + url_name): break
-    #     print('"{}" '.format(url_name) + "does not exist!!!!!!!!!")
-
-    # file_name = input("input the file name > ")
-
-    # main(file_name, url_name)
     # schedule.every().day.at("20:53").do(job)
     job()
     # while True:
