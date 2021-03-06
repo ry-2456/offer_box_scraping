@@ -135,6 +135,10 @@ if __name__ == "__main__":
     base_url, column_order, keyword, area = read_config(SCRAPING_CONFIG_FILE_NAME)
 
     now = datetime.datetime.now().strftime("%Y%m%d")
+    save_dir = os.path.join('.', DATA_SAVE_DIR, now)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
     for prefs in area:
 
         print("scraping " + prefs[-1] + " ... ", end="", flush=True)
@@ -156,6 +160,6 @@ if __name__ == "__main__":
 
             info = get_info(res.text)
             save_file_name = prefs[-1] + now + ".csv"
-            write_info(info, os.path.join(DATA_SAVE_DIR, save_file_name), column_order)
+            write_info(info, os.path.join(save_dir, save_file_name), column_order)
             pg += 1
         print("Done", flush=True)
