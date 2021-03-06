@@ -118,7 +118,7 @@ def read_config(config_file_name):
     pref1 pref2 csv_file_name1
     pref3 pref4 csv_file_name2
     """
-    with open(config_file, 'r') as f:
+    with open(config_file_name, 'r') as f:
         lines = f.readlines()
         base_url = lines[0].strip()
         keyword = lines[3].strip().split()
