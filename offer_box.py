@@ -13,14 +13,6 @@ from config import *
 url_dir = "url_dir"
 data_dir = "data_dir"
 
-
-def read_url(f_name):
-    " 求人ボックスのURLを読み込む"
-    # with open(f_name, encoding="utf-8") as f:
-    with open(f_name, encoding="utf-8") as f:
-        base_url = f.read()
-        return base_url.strip()
-
 # 既知の会社を管理する
 seen = []
 
