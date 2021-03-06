@@ -10,12 +10,9 @@ import pprint
 import requests
 from bs4 import BeautifulSoup
 from config import * 
-url_dir = "url_dir"
-data_dir = "data_dir"
 
 # 既知の会社を管理する
 seen = []
-
 def get_info(html):
     """会社名(name), 職種(job), 年収(pay), 勤務地(pay), 掲載元(source), 掲載日時(updated_at)"""
 
@@ -101,26 +98,19 @@ def sort_by_date(full_path):
 
 def read_config(config_file_name):
     """
-    以下のフォーマットのconfigファイルを読み込む
-    url
-    ---
-    keyword
-    key1 key2 
-    ---
-    area
-    pref1 pref2 csv_file_name1
-    pref3 pref4 csv_file_name2
+    scraping.cfgを読み込む
     """
     with open(config_file_name, 'r') as f:
         lines = f.readlines()
         base_url = lines[0].strip()
-        keyword = lines[3].strip().split()
+        column_order = lines[3].strip().split()
+        keyword = lines[6].strip().split()
         area = []
-        for l in lines[6:]:
+        for l in lines[9:]:
             if not l.strip(): continue
             area.append(l.strip().split())
 
-    return (base_url, keyword, area)
+    return (base_url, column_order, keyword, area)
 
 def make_request_url(base_url, delimter=" or:", **kwargs):
     """
@@ -142,7 +132,7 @@ if __name__ == "__main__":
         updated_at = input("> ")
         if updated_at in ['1', '2', '3']: break
 
-    base_url, keyword, area = read_config("scraping.cfg")
+    base_url, column_order, keyword, area = read_config(SCRAPING_CONFIG_FILE_NAME)
 
     now = datetime.datetime.now().strftime("%Y%m%d")
     for prefs in area:
@@ -155,9 +145,9 @@ if __name__ == "__main__":
                                        keyword=keyword,
                                        area=prefs[:-1],
                                        pg=str(pg))
-            data={"form[updatedAt]": updated_at,
-                  "form[employType]":'1',
-                  "feature":'1'}
+            data = {"form[updatedAt]": updated_at,
+                    "form[employType]":'1',
+                    "feature":'1'}
 
             res = requests.post(req_url, data)
             
@@ -166,7 +156,6 @@ if __name__ == "__main__":
 
             info = get_info(res.text)
             save_file_name = prefs[-1] + now + ".csv"
-            write_info(info, full_path=save_file_name, 
-                key_order=["name","job","area","pay","updated_at","source"])
+            write_info(info, os.path.join(DATA_SAVE_DIR, save_file_name), column_order)
             pg += 1
         print("Done", flush=True)
