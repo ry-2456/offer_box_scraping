@@ -9,6 +9,7 @@ import time
 import pprint
 import requests
 from bs4 import BeautifulSoup
+from config import * 
 url_dir = "url_dir"
 data_dir = "data_dir"
 
@@ -140,8 +141,6 @@ def make_request_url(base_url, delimter=" or:", **kwargs):
         req_url += (key + '=' + delimter.join(kwargs[key]))
     return req_url
 
-def main_2():
-
 if __name__ == "__main__":
     while True:
         print("掲載日範囲選択 [1, 2, 3]のどれかを選択してください\n"
@@ -160,7 +159,6 @@ if __name__ == "__main__":
         
         pg = 1
         while True:
-            print(pg)
             req_url = make_request_url(base_url, 
                                        keyword=keyword,
                                        area=prefs[:-1],
