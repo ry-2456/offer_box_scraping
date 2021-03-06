@@ -172,5 +172,27 @@ def job():
             main(file_name, url_name, updated_at)
             print("Done", flush=True)
 
+def read_config(config_file_name):
+    """
+    以下のフォーマットのconfigファイルを読み込む
+    url
+    ---
+    keyword
+    key1 key2 
+    ---
+    area
+    pref1 pref2 csv_file_name1
+    pref3 pref4 csv_file_name2
+    """
+    with open(config_file, 'r') as f:
+        lines = f.readlines()
+        base_url = lines[0].strip()
+        keyword = lines[3].strip().split()
+        area = []
+        for l in lines[6:]:
+            if not l.strip(): continue
+            area.append(l.strip().split())
+
+    return (base_url, keyword, area)
 if __name__ == "__main__":
     job()
