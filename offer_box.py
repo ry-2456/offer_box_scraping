@@ -106,72 +106,6 @@ def sort_by_date(full_path):
         writer = csv.writer(f)
         writer.writerows(lines) 
 
-
-def main(file_name, url_name, updated_at):
-    """
-    スクレイピングを行い取得したデータを保存する
-
-    Parameters
-    ----------
-    file_name : str
-        保存するファイル名 (e.g. osaka_kyoto_hyogo_siga.csv)
-    url_name: str
-        urlが書かれたファイル名(e.g. kansai_url.txt)
-    updated_at : str
-        求人掲載日の範囲(1: 24時間以内  2: 3日以内  3: 7日以内)
-    """
-
-    base_url = read_url(url_name)
-    page = 1
-
-    while True:
-        url = base_url + "&pg=" + str(page)
-        res = requests.post(url, data={"form[updatedAt]": updated_at    # 1=>24時間以内 2=>3日以内 3=>7日以内
-                                     , "form[employType]":'1'}) # 1=>正社員
-        time.sleep(1.0)                  # 警察のお世話にならないように
-        if res.status_code != 200: break # 表示するページがなくなったら抜ける
-
-        info = get_info(res.text)
-        write_info(info, full_path=file_name, 
-            key_order=["name","job","area","pay","updated_at","source"])
-
-        # print(page)
-        page += 1 # ページの更新
-    
-    sort_by_date(file_name)
-
-def job():
-    # 掲載日時範囲の選択
-    while True:
-        print("掲載日範囲選択 [1, 2, 3]のどれかを選択してください\n"
-              "1: within 24 hours\n"
-              "2: within 3 days\n"
-              "3: within 7 days")
-        updated_at = input("> ")
-        if updated_at in ['1', '2', '3']: break
-
-    # urlが書かれたファイルの読み込み
-    url_list = glob.glob(os.path.join(url_dir, "*_url.txt"))
-    url_list = [os.path.basename(d) for d in url_list]
-
-    for u in url_list:
-        print("* " + u)
-
-    while True:
-        yn = input("上記のurlすべてについてスクレイピングしますか? y or n > ")
-        if yn in ["y", "n"]: break
-    
-    # すべてのURLについてスクレイピングを行う
-    if yn == 'y':
-        now = datetime.datetime.now().strftime("%Y%m%d")
-        for u in url_list:
-            url_name = os.path.join(url_dir, u)
-            file_name = os.path.join(data_dir, u.split("_")[0]) + now + ".csv"
-
-            print("scraping " + u + " ... ", end="", flush=True)
-            main(file_name, url_name, updated_at)
-            print("Done", flush=True)
-
 def read_config(config_file_name):
     """
     以下のフォーマットのconfigファイルを読み込む
@@ -206,5 +140,43 @@ def make_request_url(base_url, delimter=" or:", **kwargs):
         req_url += (key + '=' + delimter.join(kwargs[key]))
     return req_url
 
+def main_2():
+
 if __name__ == "__main__":
-    job()
+    while True:
+        print("掲載日範囲選択 [1, 2, 3]のどれかを選択してください\n"
+              "1: within 24 hours\n"
+              "2: within 3 days\n"
+              "3: within 7 days")
+        updated_at = input("> ")
+        if updated_at in ['1', '2', '3']: break
+
+    base_url, keyword, area = read_config("scraping.cfg")
+
+    now = datetime.datetime.now().strftime("%Y%m%d")
+    for prefs in area:
+
+        print("scraping " + prefs[-1] + " ... ", end="", flush=True)
+        
+        pg = 1
+        while True:
+            print(pg)
+            req_url = make_request_url(base_url, 
+                                       keyword=keyword,
+                                       area=prefs[:-1],
+                                       pg=str(pg))
+            data={"form[updatedAt]": updated_at,
+                  "form[employType]":'1',
+                  "feature":'1'}
+
+            res = requests.post(req_url, data)
+            
+            time.sleep(1.0)
+            if res.status_code != 200: break
+
+            info = get_info(res.text)
+            save_file_name = prefs[-1] + now + ".csv"
+            write_info(info, full_path=save_file_name, 
+                key_order=["name","job","area","pay","updated_at","source"])
+            pg += 1
+        print("Done", flush=True)
