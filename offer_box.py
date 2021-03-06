@@ -4,14 +4,11 @@ import os
 import csv
 import datetime
 import glob
-import schedule
 import sys
 import time
 import pprint
 import requests
-# from urllib import request
 from bs4 import BeautifulSoup
-
 url_dir = "url_dir"
 data_dir = "data_dir"
 
@@ -135,9 +132,7 @@ def main(file_name, url_name, updated_at):
         if res.status_code != 200: break # 表示するページがなくなったら抜ける
 
         info = get_info(res.text)
-        # write_info(info, full_path=file_name, 
         write_info(info, full_path=file_name, 
-            # key_order=["source","updated_at","name","job","area","pay"])
             key_order=["name","job","area","pay","updated_at","source"])
 
         # print(page)
@@ -178,9 +173,4 @@ def job():
             print("Done", flush=True)
 
 if __name__ == "__main__":
-    # LINEでデータ送信する機能
-    # schedule.every().day.at("20:53").do(job)
     job()
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(30)
