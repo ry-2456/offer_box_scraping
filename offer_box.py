@@ -81,22 +81,6 @@ def write_info(info, full_path, key_order):
         writer = csv.writer(f)
         writer.writerows(lines) 
 
-def get_item_url(html):
-    " htmlから企業それぞれの求人ページのURLを取り出し返す"
-
-    soup = BeautifulSoup(html, "html.parser")
-    items = soup.main.find_all(
-        "section", attrs={"class": "p-result"}, recursive=False)
-    domain = "https://xn--pckua2a7gp15o89zb.com{}"
-
-    url_list = []
-    for item in items:
-        # 企業のURL取得
-        url = domain.format(item.a["href"])
-        # url_listに加える
-        url_list.append(url)
-    return url_list
-
 def get_updated_at_by_hour(l):
     p = re.compile("(\d+).*")
     m = p.fullmatch(l[1]) # updated_atから数字と時間・日前を抜き出す
