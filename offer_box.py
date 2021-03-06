@@ -194,5 +194,17 @@ def read_config(config_file_name):
             area.append(l.strip().split())
 
     return (base_url, keyword, area)
+
+def make_request_url(base_url, delimter=" or:", **kwargs):
+    """
+    base_urlにGETパラメータを付け足したrequest_urlを返す 
+    """
+    req_url = base_url + '?'
+    for i, key in enumerate(kwargs):
+        if i > 0:
+            req_url += '&'
+        req_url += (key + '=' + delimter.join(kwargs[key]))
+    return req_url
+
 if __name__ == "__main__":
     job()
